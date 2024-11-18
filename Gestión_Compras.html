@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Configuración básica del documento HTML -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+    <style>
+        /* Estilos básicos para el cuerpo y la tabla */
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Carrito de Compras</h1>
+
+    <!-- Formulario para agregar productos al carrito -->
+    <form id="productForm">
+        <input type="text" id="productName" placeholder="Nombre del producto" required>
+        <input type="number" id="productPrice" placeholder="Precio unitario" required>
+        <input type="number" id="productQuantity" placeholder="Cantidad" required>
+        <button type="submit">Agregar al Carrito</button>
+    </form>
+
+    <!-- Tabla que muestra los productos del carrito -->
+    <table id="cartTable">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Mostrar el total general del carrito -->
+    <h2>Total General: <span id="totalGeneral">0</span></h2>
+
+    <!-- Botón para finalizar la compra -->
+    <button id="finalizarCompra">Finalizar Compra</button>
+
+    <script>
+        // se inicia el carrito desde el almacenamiento local o como un arreglo vacío
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const cartTable = document.getElementById('cartTable').getElementsByTagName('tbody')[0];
+        const totalGeneral = document.getElementById('totalGeneral');
+
+        //  enviaremos el formulario para agregar un producto al carrito
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Evita que la página se recargue al enviar el formulario
+
+            // Obtener los valores ingresados por el usuario
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const quantity = parseInt(document.getElementById('productQuantity').value);
+
+            // Validar los datos y actualizar el carrito si son válidos
+            if (name && price > 0 && quantity > 0) {
+                addToCart(name, price, quantity);
+                updateCart(); // Actualizar la tabla del carrito
+                localStorage.setItem('cart', JSON.stringify(cart)); // Guardar el carrito en el almacenamiento local
+            }
+        });
+
+        // Función para agregar un producto al carrito
+        function addToCart(name, price, quantity) {
+            cart.push({ name, price, quantity }); // Añadir el producto al arreglo del carrito
+        }
+
+        // Función para actualizar la tabla del carrito
+        function updateCart() {
+            cartTable.innerHTML = ''; // Limpiar el contenido actual de la tabla
+            let total = 0; // Inicializar el total general
+
+            // Recorrer cada producto del carrito
+            cart.forEach((item, index) => {
+                const row = cartTable.insertRow(); // Crear una nueva fila en la tabla
+                row.insertCell(0).innerText = item.name; // Nombre del producto
+                row.insertCell(1).innerText = item.price.toFixed(2); // Precio unitario con 2 decimales
+                row.insertCell(2).innerText = item.quantity; // Cantidad del producto
+                const itemTotal = item.price * item.quantity; // Calcular el total por producto
+                row.insertCell(3).innerText = itemTotal.toFixed(2); // Mostrar el total en la tabla
+                total += itemTotal; // Sumar al total general
+
+                // Crear un botón para eliminar el producto
+                const deleteCell = row.insertCell(4);
+                deleteCell.innerHTML = `<button onclick="removeFromCart(${index})">Eliminar</button>`;
+            });
+
+            // Actualizar el total general en la interfaz
+            totalGeneral.innerText = total.toFixed(2);
+        }
+
+        // Función para eliminar un producto del carrito
+        function removeFromCart(index) {
+            cart.splice(index, 1); // Eliminar el producto de la lista del carrito
+            updateCart(); // Actualizar la tabla del carrito
+            localStorage.setItem('cart', JSON.stringify(cart)); // Guardar los cambios en el almacenamiento local
+        }
+
+        // Evento para finalizar la compra
+        document.getElementById('finalizarCompra').addEventListener('click', function() {
+            if (cart.length > 0) { // Verificar si el carrito no está vacío
+                alert('Compra finalizada. ¡Gracias por su compra!');
+                cart = []; // Vaciar el carrito
+                localStorage.removeItem('cart'); // Eliminar el carrito del almacenamiento local
+                updateCart(); // Actualizar la tabla
+            } else {
+                alert('El carrito está vacío.'); // Mostrar mensaje si no hay productos
+            }
+        });
+
+        // Actualizar la tabla del carrito al cargar la página
+        updateCart();
+    </script>
+</body>
+</html>
